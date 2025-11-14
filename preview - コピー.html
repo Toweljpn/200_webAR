@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>部屋に商品を置いてみる（プレビュー）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #000;
+      color: #fff;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    /* カメラ映像（背景） */
+    #cameraVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;      /* 画面全体に表示 */
+      background: #000;
+      transform: scaleX(-1);  /* 必要なら鏡像を解除：-1 → 1 に変える */
+    }
+
+    /* 商品画像のオーバーレイ */
+    .overlay-item {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 50vw;           /* 画面幅の50%を初期サイズに */
+      max-width: 80vh;       /* 縦とのバランス調整 */
+      transform: translate(-50%, -50%);
+      pointer-events: none;  /* ひとまず操作不可（後のフェーズでドラッグ等を実装） */
+      opacity: 0.95;
+    }
+
+    .overlay-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* 画面下部の簡易UIバー */
+    .bottom-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 8px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0));
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    .status-text {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+    }
+
+    .btn:active {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .btn.small {
+      flex: 0;
+      padding-inline: 12px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- 背景のカメラ映像 -->
+    <video id="cameraVideo" playsinline autoplay muted></video>
+
+    <!-- 選択中の商品画像（とりあえず固定のダミー） -->
+    <div class="overlay-item" id="overlayItem">
+      <!-- ★ここを自社商品の画像パスに差し替える -->
+      <img src="item_sample.png" alt="商品プレビュー画像" />
+    </div>
+
+    <!-- 画面下部の簡易UI -->
+    <div class="bottom-bar">
+      <div class="status-text" id="statusText">
+        カメラを起動しています…
+      </div>
+
+      <div class="button-row">
+        <button class="btn small" id="toggleCameraBtn">
+          カメラ再起動
+        </button>
+        <button class="btn small" id="flipFacingBtn">
+          カメラ切替
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const videoEl = document.getElementById('cameraVideo');
+      const statusEl = document.getElementById('statusText');
+      const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+      const flipFacingBtn = document.getElementById('flipFacingBtn');
+
+      let currentStream = null;
+      let useBackCamera = true; // true: 背面カメラ（environment）を優先
+
+      async function startCamera() {
+        // 既存ストリームがあれば停止
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+          currentStream = null;
+        }
+
+        statusEl.textContent = 'カメラを起動しています…';
+
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: useBackCamera ? { ideal: 'environment' } : 'user'
+          }
+        };
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          currentStream = stream;
+          videoEl.srcObject = stream;
+
+          videoEl.onloadedmetadata = () => {
+            videoEl.play().catch(() => {
+              // 自動再生できない場合
+            });
+          };
+
+          statusEl.textContent = useBackCamera
+            ? '背面カメラでプレビュー中です。商品を部屋に重ねてイメージしてください。'
+            : '前面カメラでプレビュー中です。必要に応じて背面に切り替えてください。';
+        } catch (err) {
+          console.error(err);
+          if (err.name === 'NotAllowedError') {
+            statusEl.textContent = 'カメラへのアクセスが拒否されました。ブラウザの設定から許可してください。';
+          } else if (err.name === 'NotFoundError') {
+            statusEl.textContent = '利用可能なカメラが見つかりませんでした。別の端末でお試しください。';
+          } else {
+            statusEl.textContent = 'カメラの起動に失敗しました: ' + err.message;
+          }
+        }
+      }
+
+      function init() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          statusEl.textContent = 'このブラウザはカメラ機能に対応していません。最新のChrome / Safariなどでお試しください。';
+          return;
+        }
+
+        startCamera();
+
+        toggleCameraBtn.addEventListener('click', () => {
+          startCamera();
+        });
+
+        flipFacingBtn.addEventListener('click', () => {
+          useBackCamera = !useBackCamera;
+          startCamera();
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', init);
+    })();
+  </script>
+</body>
+</html>
