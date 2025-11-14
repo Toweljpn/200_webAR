@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>インテリアARプレビュー デモ一覧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 16px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    p.description {
+      font-size: 13px;
+      margin-bottom: 16px;
+      color: #555;
+    }
+    .product-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .product-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .product-image-wrapper {
+      width: 100%;
+      padding-top: 75%;
+      position: relative;
+      overflow: hidden;
+      border-radius: 6px;
+      background: #eee;
+    }
+    .product-image-wrapper img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .product-name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .product-meta {
+      font-size: 12px;
+      color: #777;
+    }
+    .preview-btn {
+      margin-top: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: #0070f3;
+      color: #fff;
+    }
+    .preview-btn:active {
+      background: #0059c0;
+    }
+    .footer-note {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>インテリアARプレビュー デモ</h1>
+    <p class="description">
+      下の3つの商品から選び、「この商品を部屋に置いてみる」ボタンを押すと、カメラ映像の上に商品画像が重なって表示されます。
+    </p>
+
+    <div class="product-list">
+      <!-- 商品1 -->
+      <div class="product-card">
+        <div class="product-image-wrapper">
+          <img src="item1.png" alt="商品1の画像" />
+        </div>
+        <div class="product-info">
+          <div class="product-name">クッションA</div>
+          <div class="product-meta">ふんわりタイプのクッション（デモ用）</div>
+          <button
+            class="preview-btn"
+            data-img="item1.png"
+            data-name="クッションA"
+          >
+            この商品を部屋に置いてみる
+          </button>
+        </div>
+      </div>
+
+      <!-- 商品2 -->
+      <div class="product-card">
+        <div class="product-image-wrapper">
+          <img src="item2.png" alt="商品2の画像" />
+        </div>
+        <div class="product-info">
+          <div class="product-name">フロアライトB</div>
+          <div class="product-meta">間接照明タイプのライト（デモ用）</div>
+          <button
+            class="preview-btn"
+            data-img="item2.png"
+            data-name="フロアライトB"
+          >
+            この商品を部屋に置いてみる
+          </button>
+        </div>
+      </div>
+
+      <!-- 商品3 -->
+      <div class="product-card">
+        <div class="product-image-wrapper">
+          <img src="item3.png" alt="商品3の画像" />
+        </div>
+        <div class="product-info">
+          <div class="product-name">花瓶C</div>
+          <div class="product-meta">シンプルな花瓶（デモ用）</div>
+          <button
+            class="preview-btn"
+            data-img="item3.png"
+            data-name="花瓶C"
+          >
+            この商品を部屋に置いてみる
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      ※ このページは社内検討用デモです。PCではカメラの代わりに内蔵カメラが表示されます。
+    </div>
+  </div>
+
+  <script>
+    // 「この商品を部屋に置いてみる」ボタン → preview.html へ遷移
+    document.querySelectorAll('.preview-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const img = btn.dataset.img || '';
+        const name = btn.dataset.name || '';
+        const url =
+          'preview.html?img=' + encodeURIComponent(img) +
+          '&name=' + encodeURIComponent(name);
+        location.href = url;
+      });
+    });
+  </script>
+</body>
+</html>
